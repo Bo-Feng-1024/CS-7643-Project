@@ -8,6 +8,10 @@ in_domain_accuracy	out_of_domain_accuracy
 0.6807	0.5261
 **0.7440	0.5178**
 
+**For Cola:** 1e-5
+in_domain_accuracy	out_of_domain_accuracy
+Epoch 1: In-Domain Accuracy = 0.7709, Out-of-Domain Accuracy = 0.5003
+
 Context distillation using **Mnli,** results from the file
 in_domain_accuracy	out_of_domain_accuracy
 0.6313508667065150	0.5003666666666670
