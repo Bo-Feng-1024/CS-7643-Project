@@ -1,1 +1,133 @@
+from datasets import load_dataset, ClassLabel
+from sklearn.metrics import accuracy_score
+from transformers import Trainer, TrainingArguments, AutoModelForSequenceClassification, AutoTokenizer, AdamW, AutoConfig
+import numpy as np
+import pandas as pd
+import torch
 
+# Set seed, load RTE dataset
+torch.manual_seed(42)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(42)
+
+# Load the dataset and print its structure
+in_domain_data = load_dataset("glue", "rte")
+print("Dataset structure:", in_domain_data)
+print("\nColumns in training set:", in_domain_data['train'].column_names)
+print("\nFirst example:", in_domain_data['train'][0])
+
+# Define model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained("facebook/opt-125m")
+
+config = AutoConfig.from_pretrained("facebook/opt-125m", num_labels=2, hidden_dropout_prob=0.1, attention_probs_dropout_prob=0.1)
+model = AutoModelForSequenceClassification.from_pretrained("facebook/opt-125m", config=config)
+
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    predictions = np.argmax(logits, axis=-1)
+    return {"accuracy": accuracy_score(labels, predictions)}
+
+def manipulate_inputs_for_rte(examples):
+    # Print the keys to debug
+    print("Available keys in examples:", examples.keys())
+
+    # Combine sentence1 and sentence2 with a separator for each example
+    sentences = [f"{s1} [SEP] {s2}" for s1, s2 in zip(examples["sentence1"], examples["sentence2"])]
+
+    # Tokenize the combined texts
+    tokenized = tokenizer(
+        sentences,
+        truncation=True,
+        padding="max_length",
+        max_length=128
+    )
+
+    # Make sure to keep the labels
+    tokenized["labels"] = examples["label"]
+
+    return tokenized
+
+# Process each split separately
+processed_datasets = {}
+for split in in_domain_data.keys():
+    processed_datasets[split] = in_domain_data[split].map(
+        manipulate_inputs_for_rte,
+        batched=True,
+        remove_columns=in_domain_data[split].column_names
+    )
+
+# Rest of your training code remains the same...
+# Define parameters for training experiments
+few_shot_sample_size = [2, 16, 32, 64, 128]
+# 2, 32, 128  # number of examples for each class
+num_epochs = 40
+batch_size = 32
+learning_rate = 1e-5
+weight_decay = 0.
+warmup_ratio = 0.1
+num_runs = 10
+optimizer = AdamW(model.parameters(), lr=learning_rate)
+
+results_df = pd.DataFrame(columns=["n", "run", "in_domain_accuracy"])
+
+for n in few_shot_sample_size:
+    for run_idx in range(num_runs):
+        # re-initialize model for each run
+        model = AutoModelForSequenceClassification.from_pretrained("facebook/opt-125m", config=config)
+        optimizer = AdamW(model.parameters(), lr=learning_rate)
+
+        # Select n random examples for each class from the original data
+        indices_entail = np.where(np.array(in_domain_data["train"]["label"]) == 0)[0]
+        indices_not_entail = np.where(np.array(in_domain_data["train"]["label"]) == 1)[0]
+        indices_entail = np.random.choice(indices_entail, n, replace=False)
+        indices_not_entail = np.random.choice(indices_not_entail, n, replace=False)
+        indices = np.concatenate([indices_entail, indices_not_entail])
+
+        # Select the examples for the new training set
+        train_dataset = processed_datasets["train"].select(indices)
+
+        # Define training config
+        total_steps = (len(train_dataset) // batch_size) * num_epochs
+
+        training_args = TrainingArguments(
+            output_dir="./results",
+            overwrite_output_dir=True,
+            num_train_epochs=num_epochs,
+            per_device_train_batch_size=batch_size,
+            learning_rate=learning_rate,
+            weight_decay=weight_decay,
+            save_steps=10_000,
+            save_total_limit=2,
+            warmup_steps=int(warmup_ratio * total_steps),
+        )
+
+        # Define the trainer
+        trainer = Trainer(
+            model=model,
+            args=training_args,
+            train_dataset=train_dataset,
+            compute_metrics=compute_metrics,
+            optimizers=(optimizer, None),
+        )
+
+        # Train the model
+        trainer.train()
+
+        # Evaluate in-domain performance
+        print(f"Evaluating in-domain performance for n={n}...")
+        eval_results = trainer.evaluate(eval_dataset=processed_datasets["validation"])
+
+        # Store the in-domain accuracy
+        in_domain_accuracy = eval_results["eval_accuracy"]
+
+        # Print the in-domain evaluation results
+        for key, value in eval_results.items():
+            print(f"In-domain {key}: {value}")
+
+        # Add the results to the DataFrame
+        new_row = pd.DataFrame({
+            "n": [n],
+            "run": [run_idx],
+            "in_domain_accuracy": [in_domain_accuracy]
+        })
+        results_df = pd.concat([results_df, new_row], ignore_index=True)
