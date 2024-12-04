@@ -95,3 +95,29 @@ in_domain_accuracy	out_of_domain_accuracy
 |                | 8             | 0.5415                      | 0.5197                            |
 |                | 9             | 0.5415                      | 0.5197                            |
 |                | 10            | 0.5415                      | 0.5197                            |
+
+# Shorter Version Results
+- config: r = 4. 
+- Parameters:
+    few_shot_sample_size = [2, 32, 128]  
+    num_epochs = 40
+    batch_size = 32
+    learning_rate = 1e-5
+    weight_decay = 0.0
+    warmup_ratio = 0.1
+    num_runs = 3
+## **Accuracy Across Different `n` and `Rank` Values**
+
+| **n** | **Rank (`r`)** | **Run** | **In-Domain Accuracy (RTE)** | **Out-of-Domain Accuracy (HANS)** |
+|-------|----------------|---------|------------------------------|------------------------------------|
+| 2     | 4              | 0       | 0.5740                       | 0.5011                            |
+| 2     | 4              | 1       | 0.5560                       | 0.5194                            |
+| 2     | 4              | 2       | 0.5560                       | 0.5194                            |
+| 32    | 4              | 0       | 0.5451                       | 0.5193                            |
+| 32    | 4              | 1       | 0.5451                       | 0.5193                            |
+| 32    | 4              | 2       | 0.5451                       | 0.5193                            |
+| 128   | 4              | 0       | 0.5560                       | 0.5195                            |
+| 128   | 4              | 1       | 0.5560                       | 0.5195                            |
+| 128   | 4              | 2       | 0.5560                       | 0.5195                            |
+
+- Time used: 14545.49 seconds ( 4 hrs, 2 min, and 25 sec).
