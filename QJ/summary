@@ -1,5 +1,6 @@
 Total running time: 2.614 hour
 
+promt improves out of domain accuracy by 0.3%
 
 avg in domain accuracy avg in_domain_loss avg out_of_domain accuracy avg out_of_domain_loss avg in_domain_runtime avg out_of_domain_runtime
 2    0.5032491          1.4172207         0.499353                    0.7630736             1.96389              205.90886
