@@ -53,6 +53,7 @@
 | 128 | 4        | 3         | 0.5740             | 0.6896         | 0.4911                 | 0.7054             | 1656.33           |
 
 # opt-350m
+## V3, changed preprocessing,
 | Step | Training Loss | In-Domain Eval Loss | In-Domain Eval Accuracy | In-Domain Eval Runtime (s) | Out-of-Domain Eval Loss | Out-of-Domain Eval Accuracy | Out-of-Domain Eval Runtime (s) |
 |------|---------------|---------------------|--------------------------|-----------------------------|--------------------------|-----------------------------|---------------------------------|
 | 500  | 0.7276        | 0.6937             | 0.5632                   | 2.1957                      | 0.7133                  | 0.5024                      | 228.0586                        |
@@ -63,7 +64,7 @@
 | 3000 | 0.6875        | 0.6896             | 0.5740                   | 2.0971                      | 0.7054                  | 0.4911                      | 227.8559                        |
 | Total Runtime: (15511.36 seconds) 
 
-Previous experiments, v1:
+# Previous experiments, v1:
 - Looping through 5 config, with r = 1,2,4,8,64. 
 - Parameters:
     few_shot_sample_size = [2, 32, 128]  
