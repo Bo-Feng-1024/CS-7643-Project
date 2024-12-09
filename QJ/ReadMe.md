@@ -1,0 +1,14 @@
+Experiment 1: hyper parametet tuning on learning rate
+
+
+Experiment 2: model size vs accuracy
+
+
+Experiment 3: model size vs loss
+
+
+Experiment 3: model size vs run time
+
+
+opt 125m 2.61 h
+opt 350m 8.67 h
