@@ -10,7 +10,7 @@ Experiment 3: model size vs loss
 ![image](https://github.com/user-attachments/assets/b13ae9e7-cdbf-4212-9217-812f43c43519)
 ![image](https://github.com/user-attachments/assets/a796c25b-d679-4b53-a9be-8445775925f7)
 
-Experiment 3: model size vs run time
+Experiment 4: model size vs run time
 total run time:
 - opt 125m 2.61 h
 - opt 350m 8.67 h
