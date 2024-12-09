@@ -1,8 +1,15 @@
-Total running time: 2.614 hour
 
-promt improves out of domain accuracy by 0.3%
+Experiment 1: hyper parametet tuning on learning rate
 
-avg in domain accuracy avg in_domain_loss avg out_of_domain accuracy avg out_of_domain_loss avg in_domain_runtime avg out_of_domain_runtime
-2    0.5032491          1.4172207         0.499353                    0.7630736             1.96389              205.90886
-32   0.527076           2.322063          0.498833                    0.766501             1.96636              206.28794
-128  0.599278           3.266377          0.5                        1.028545             1.96166              206.37514
+
+Experiment 2: model size vs accuracy
+
+Experiment 3: model size vs loss
+
+
+Experiment 3: model size vs run time
+
+
+
+opt 125m 2.61 h
+opt 350m 8.67 h
