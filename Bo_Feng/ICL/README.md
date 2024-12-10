@@ -3,129 +3,101 @@
 - Repository: https://github.com/uds-lsv/llmft/tree/main
 - Main Python Script: [`eval.py`](https://github.com/uds-lsv/llmft/blob/main/eval.py)
 
-**Global Parameter Settings**
- The `eval.py` script uses a set of global parameters configured through command-line arguments.
+## Repo Description
 
-**Running the In-Context Learning Experiment**
+This repository is focused on fine-tuning Large Language Models (LLMs) and contains several key components:
 
-1. Run the shell script `experiments/in_context/opt.sh`.
-2. This script calls `scripts/in_context/mnli/run_minimal.sh`.
-3. That shell script then runs `eval.py` with specified parameters.
+1. Purpose:
 
-------
+- The repository provides tools and scripts for fine-tuning large language models
+- It supports various NLP (Natural Language Processing) tasks
+- Includes optimization capabilities through DeepSpeed integration
 
-**Code Flow and Key Steps**
+1. Main Components:
 
-1. **Setup and Configuration**
+- Model wrappers: Interfaces for working with different language models
+- Training scripts: Code for training and fine-tuning models
+- Configuration files: Settings for optimization and training parameters
+- Dataset utilities: Tools for managing and processing training data
 
-   ```python
-   parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments, InContextLearningArguments))
+1. Key Features:
+
+- DeepSpeed integration for improved performance and distributed training
+- Support for multiple NLP tasks
+- Flexible configuration options
+- Evaluation capabilities
+
+1. Structure:
+
+- Training scripts for model fine-tuning
+- Evaluation scripts for assessing model performance
+- Configuration files for DeepSpeed and other settings
+- Utility functions for data handling and processing
+
+This repository serves as a toolkit for researchers and developers who want to fine-tune large language models for specific tasks or domains, with a focus on efficiency and performance through DeepSpeed optimization.
+
+## In-Context Learning Experiment
+
+Based on the repository content, here's how this repo simulates in-context learning experiments:
+
+1. Model Support:
+
+- Supports multiple large language models including:
+  - OPT models (125M to 30B parameters)
+  - Pythia models (410M to 12B parameters)
+
+1. Experiment Scripts Structure: The main experiment scripts are located in `/experiments/in_context/`:
+
+a) Model-specific orchestration scripts:
+
+- `opt.sh`: Orchestrates experiments for OPT models
+- `pythia.sh`: Orchestrates experiments for Pythia models
+
+b) Task-specific evaluation scripts in `/scripts/in_context/`:
+
+- `mnli/run_minimal.sh`: Minimal format evaluation
+- `mnli/run_gpt3.sh`: GPT-3 style evaluation
+- `mnli/run_eval_harness.sh`: Evaluation harness format
+
+1. Evaluation Patterns: Supports different input formatting patterns:
+
+- Minimal format: Simple pattern with basic prompting
+- GPT-3 format: Following GPT-3 style prompting
+- Eval-harness format: Structured evaluation format
+
+1. Key Components of Experiments:
+
+- Uses DeepSpeed for distributed training/evaluation
+- Supports different batch sizes (2, 16, 32)
+- Multiple evaluation runs with different data seeds (0-9) for robustness
+- Configurable parameters:
+  - Number of shots
+  - Maximum sequence length
+  - Model configurations
+  - Input/output patterns
+  - Evaluation tasks
+
+1. Example Execution Flow:
+
+   ```bash
+   # For each batch size:
+   bash run_minimal.sh mnli <batch_size> <model_name> 1 60000
+   bash run_gpt3.sh mnli <batch_size> <model_name> 1 60000  
+   bash run_eval_harness.sh mnli <batch_size> <model_name> 1 60000
    ```
 
-   - The code begins by parsing model arguments, data arguments, training arguments, and in-context learning arguments.
-   - It sets up logging and seeds for reproducibility.
+2. Evaluation Features:
 
-2. **Data Loading and Processing**
+   - Balanced evaluation
 
-   ```python
-   if data_args.task_name in ["rte", "mnli", "mnli-original", "qqp", "cola"]:
-       raw_datasets, label_list, num_labels, is_regression = load_glue_datasets(data_args, model_args)
-   ```
+   - Data shuffling
 
-   - It loads the specified dataset (for example, MNLI).
-   - It can also load additional evaluation datasets, such as HANS.
+   - FP16 precision support
 
-3. **Creating the In-Context Learning Prompt**
+   - Configurable random seeds
 
-   ```python
-   context, contex_indices = create_few_shot_context(
-       data_args.task_name, 
-       raw_datasets["train"], 
-       in_context_args.num_shots,
-       pattern=in_context_args.pattern,
-       label_to_tokens=id_to_target_token,
-       separate_shots_by=in_context_args.separate_shots_by, 
-       description=in_context_args.task_description,
-       target_prefix=in_context_args.target_prefix,
-       balanced=in_context_args.balanced, 
-       shuffle=in_context_args.shuffle,
-       seed=training_args.data_seed
-   )
-   ```
+   - Multiple evaluation metrics
 
-   - This step generates a few-shot context using training examples.
-   - It uses parameters like the number of examples (shots), format patterns, and optional shuffling for balanced sampling.
+   - Support for out-of-domain evaluation
 
-4. **Preprocessing Examples**
-
-   ```python
-   def preprocess_function(examples):
-       if context != "":
-           pattern = f"{context}{in_context_args.pattern}"
-       else:
-           pattern = in_context_args.pattern
-       
-       pattern_examples = [
-           pattern.format(
-               text1=examples[sentence1_key][idx],
-               text2=examples[sentence2_key][idx] if sentence2_key is not None else None
-           )
-           for idx in range(len(examples[sentence1_key]))
-       ]
-   ```
-
-   - Each example is formatted using the chosen pattern and the created context.
-   - Labels are mapped to target tokens.
-   - After formatting, the examples are tokenized.
-
-5. **Evaluation**
-
-   ```python
-   trainer = FtTrainer(
-       model=model,
-       args=training_args,
-       train_dataset=None,
-       eval_dataset=None,
-       compute_metrics=compute_metrics,
-       tokenizer=tokenizer,
-       data_collator=data_collator,
-       data_args=data_args,
-       eval_only=True
-   )
-   ```
-
-   - Uses a custom `FtTrainer` for evaluation.
-   - Computes metrics such as accuracy.
-   - Can handle both in-domain and out-of-domain datasets.
-
-6. **Example Input Formats for MNLI**
-    Possible input patterns include:
-
-   ```
-   # GPT-3 style:
-   "{text1} question: {text2} Yes or No?"
-   
-   # Minimal style:
-   "{text1} {text2} ?"
-   
-   # Eval-harness style:
-   "{text1} \nQuestion: {text2} True or False?"
-   ```
-
-   These patterns guide how text is presented to the model for in-context learning.
-
-7. **Results Collection**
-
-   ```python
-   all_results = _add_args_to_results(in_context_args, all_results)
-   all_results["indices"] = contex_indices
-   all_results["context"] = context
-   all_results["data_seed"] = training_args.data_seed
-   ```
-
-   - Finally, the script aggregates all results.
-   - It includes metadata such as the chosen context, data seed, and argument settings.
-
-------
-
-**Source**: https://github.com/uds-lsv/llmft/tree/main
+This setup allows for systematic experimentation with in-context learning across different models, formats, and evaluation settings while ensuring reproducibility and robustness through multiple runs with different seeds.
