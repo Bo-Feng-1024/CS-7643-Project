@@ -51,6 +51,10 @@
     - Batch size of 8 with gradient accumulation steps of 4
     - Learning rate: 1e-5 with warmup over 10% of total steps
   - **Loss Function**: equally weighted average on distillation loss and classification loss, where distillation_loss uses KL divergence between teacher and student outputs, and classification_loss uses standard cross-entropy. 
-  - 
+  - **Optimization**
+    - AdamW optimizer with weight decay set to 0
+    - FP16 training enabled
+    - Gradient accumulation implemented for effective batch size of 32
+    - Device mapping automatically handled for optimal resource utilization
 - experiment result: 
   - 
