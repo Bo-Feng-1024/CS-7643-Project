@@ -1,5 +1,7 @@
 # Efficient LLM Supervised Fine-Tuning: Long Dialogue Conversations
 
+**See the [pdf](https://github.com/Bo-Feng-1024/CS-7643-Project/blob/main/Project_Report___CS_7643.pdf) as our final report.**
+
 ## Objectives  
 
 Our project explores alternatives to in-context learning (ICL) by focusing on efficient supervised fine-tuning techniques, such as the **context distillation method**, for the **natural language inference (NLI)** classification task. We aim to compare these techniques with the ICL approach.  
